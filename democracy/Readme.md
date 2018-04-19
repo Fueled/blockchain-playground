@@ -12,26 +12,37 @@ Simple example of tracking supply state in a EOS smart contract.
 
 To push the contract onto the EOS blockchain we have to do the following things:
 
-- Generate WebAssembly file (.wast)
-- Generate ABI
-- Allocate Wallet Address
-- Push ABI onto blockchain
+- [Allocate Wallet Address](#setting-up-eos-wallet)
+- [Run deploy script](#generate-webassembly-file)
+
+You can use a simple script in contracts called `deploy_contract.sh` that will 
 
 
-### Generate WebAssembly file
+### Deploy script
+We've created a quick deploy script that does the following steps:
+- Creates the WebAssembly file
+- Creates the ABI file
+- Deploys contract with given account
 
-To generate Wast file you can run the following command:
+**Usage:**
+
+In the root folder of the project, run:
+
 ```
-eosiocpp -o hello.wast hello.cpp
+./contracts/deploy_contract.sh <ACCOUNT> <CONTRACT>
 ```
 
-### Generate ABI
+This script assumes the following contract structure, lets say we have `HelloWorld`:
+```
+contracts/
+    HelloWorld/
+        HelloWorld.cpp
+        Helloworld.hpp
 
-In order to push to the blockchain we create an Application Binary Interface, which is a json file that maps your actions and data structures:
+    deploy_contract.sh
+```
 
-
-
-## Understanding EOS Wallet
+## Setting up EOS wallet
 
 In order to deploy a contract you will have to push the code onto an account. This account is created with your public key you created through `cleos`.
 
@@ -46,12 +57,12 @@ This will give you a Public and Private key, note that *only the public key is s
 
 ```
 - Wallet 1 <Public/Secret Key>
-	- Account laura
-	- Account paul
+    - Account laura
+    - Account paul
 
 - Wallet 2 <Public/Secret Key>
-	- Account henk
-	- Account julien
+    - Account henk
+    - Account julien
 ```
 
 ### Creating your account
@@ -70,6 +81,11 @@ cleos create account eosio hello.code <OWNER PUBLIC KEY> <YOUR PUBLIC KEY>
 ```
 
 *Note the `PUBLIC OWNER KEY`*: Accounts can be created as sort of a `subaccount`, this basically gives the `owner` certain permissions to control the transactions of that sub account.
+
+
+
+
+# Notes
 
 
 ## Understanding EOS Smart contract
@@ -101,4 +117,16 @@ cleos create account eosio hello.code <OWNER PUBLIC KEY> <YOUR PUBLIC KEY>
     	- Format is `EOSLIB_SERIALIZE(N(table_name), (field1)(field2)(field3))`
     - `N()` is a macro to `eosio::string_to_name` method that basically takes a string and returns back a 64 bit integer.
 
+    - Use the `available_primary_key` method when you have `i64` setup as `id`
 
+
+### Generate WebAssembly file
+
+To generate Wast file you can run the following command:
+```
+eosiocpp -o hello.wast hello.cpp
+```
+
+### Generate ABI
+
+In order to push to the blockchain we create an Application Binary Interface, which is a json file that maps your actions and data structures:
