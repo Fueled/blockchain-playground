@@ -5,77 +5,105 @@ using namespace eosio;
 using namespace std;
 
 class ballot : public contract {
-    using contract::contract;
+  using contract::contract;
 
-    public:
-        ballot( account_name self ) :
-            contract(self),
-            _votes_casted(_self, _self),
-            _ballots(_self, _self)
-            {}
+  public:
+      ballot( account_name self ) :
+        contract(self),
+        members(_self, _self),
+        proposals(_self, _self)
+        {}
 
-        // @abi action
-        void propose( account_name sender, string proposal ){
-            require_auth(sender);
+      // @abi action
+      void propose( account_name sender, string description ){
+        require_auth(sender);
 
-            eosio_assert(proposal != "", "Proposal value cannot be empty");
+        eosio_assert(description != "", "Proposal description cannot be empty");
 
-            auto new_ballot_itr = _ballots.emplace( _self, [&]( auto& ballot) {
-                ballot.id = _ballots.available_primary_key();
-                ballot.owner = sender;
-                ballot.proposal = proposal;
-            });
+        auto new_proposal = proposals.emplace( _self, [&]( auto& proposal) {
+            proposal.id = proposals.available_primary_key();
+            proposal.owner = sender;
+            proposal.description = description;
+        });
 
-            print((uint64_t)new_ballot_itr->id);
-        }
+        print((uint64_t)new_proposal->id);
+      }
 
-        /**
-         * Vote for a specific ballot
-         */
-        // @abi action
-        void vote( account_name voter, uint64_t ballot_id ) {
-          require_auth(voter);
+      /**
+       * Vote for a specific ballot
+       */
+      // @abi action
+      void vote( account_name account, uint64_t proposal_id ) {
 
-          auto iter = _ballots.find(ballot_id);
+        require_auth(account);
+        auto member = retrieve_member(account);
 
-          // assert basically checks if iteration is at the end, meaning there is
-          // no value
-          eosio_assert(iter != _ballots.end(), "Could not find ballot");
+        auto iter = proposals.find(proposal_id);
 
+        // assert basically checks if iteration is at the end, meaning there is
+        // no value
+        eosio_assert(iter != proposals.end(), "Could not find proposal");
 
-          _ballots.modify( iter, 0, [&]( auto& ballot) {
-             ballot.votes.emplace_back(voter);
-          });
-        }
+        proposals.modify( iter, 0, [&]( auto& proposal) {
+
+          // Check if the member already casted a vote
+          for(auto const& value: proposal.votes) {
+            eosio_assert(value.owner != member.owner, "Member already voted");
+          }
+
+          proposal.votes.emplace_back();
+          proposal.votes.back().owner = member.owner;
+          proposal.votes.back().weight = member.weight;
+        });
+      }
+
+      // @abi action
+      void add_member( account_name account ) {
+
+      }
 
     private:
 
-    	// @abi table
-    	struct votes_casted {
-    		account_name voter;
-    		uint64_t times_voted;
+    	// @abi table member i64
+    	struct Member {
+    		account_name owner;
+    		uint64_t weight;
 
-    		account_name primary_key() const { return voter; }
+    		account_name primary_key() const { return owner; }
 
-    		EOSLIB_SERIALIZE( votes_casted, (voter)(times_voted))
+    		EOSLIB_SERIALIZE( Member, (owner)(weight))
     	};
 
-   		multi_index<N(votes_casted), votes_casted> _votes_casted;
+      /**
+       * Requires the account to be a member, returns the member struct
+       */
+      Member retrieve_member( account_name voter) {
+        auto iter = members.find(voter);
+        eosio_assert(iter != members.end(), "Account is not a member of this democracy");
 
-   		// @abi table ballots i64
-   		struct ballots {
+        return *iter;
+      }
+
+      struct Ballot {
+          account_name owner;
+          uint32_t weight;
+      };
+
+   		// @abi table proposal i64
+   		struct Proposal {
         uint64_t id;
    			account_name owner = 0;
-   			string proposal;
-        std::vector<account_name> votes;
+   			string description;
+        std::vector<Ballot> votes;
 
         uint64_t primary_key() const { return id; }
 
-        EOSLIB_SERIALIZE( ballots, (id)(owner)(proposal)(votes))
+        EOSLIB_SERIALIZE( Proposal, (id)(owner)(description)(votes))
    		};
 
-      multi_index<N(ballots), ballots> _ballots;
 
+      multi_index<N(Proposal), Proposal> proposals;
+      multi_index<N(Member), Member> members;
 };
 
 EOSIO_ABI( ballot, (propose)(vote) )
