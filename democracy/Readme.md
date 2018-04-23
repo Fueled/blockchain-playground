@@ -1,6 +1,6 @@
-# Supply Tracking Smart Contract
+# Democracy EOS Smart Contract
 
-Simple example of tracking supply state in a EOS smart contract.
+Simple example of the usual ETH in a EOS smart contract.
 
 ## Requirements
 
@@ -53,12 +53,21 @@ cleos create key
 
 This will give you a Public and Private key, note that *only the public key is shared* and is used to create your wallet. From there, verification is done with your Private key you have locally.
 
+A small indicator that distinct these two keys is that the public key starts with the `EOS` prefix.
+
 ### Structure of Wallets and Accounts
+Similar to other Distributed Apps Blockchain networks such as Ethereum the EOS blockchain uses Wallets to store your assets and sending and receiving transactions. It uses a client called `cleos` to sign your transactions and keeps your private keys safe by encryption.
+
+The difference of EOS and Ethereum is that EOS goes a little further and associates Accounts to these Wallets. An account is a human readable identifier that is stored on the blockchain. These accounts on itself can have specific permissions that are validated upon the transaction to see if this account is permissioned to do so.
 
 ```
 - Wallet 1 <Public/Secret Key>
     - Account laura
+        - Permission read
+        - Permission custom_permission
     - Account paul
+        - Permission write
+        - Permission read
 
 - Wallet 2 <Public/Secret Key>
     - Account henk
@@ -71,6 +80,9 @@ When you retrieved your public key you can start creating an account. These acco
 Before you can create an account with a specific Public key, make sure that you have imported the private key inside Cleos:
 ```
 cleos create key
+
+>> Private Key: ...
+>> Public Key: EOS...
 ```
 ```
 cleos import <Private key>
@@ -129,4 +141,26 @@ eosiocpp -o hello.wast hello.cpp
 
 ### Generate ABI
 
-In order to push to the blockchain we create an Application Binary Interface, which is a json file that maps your actions and data structures:
+In order to push to the blockchain we create an Application Binary Interface, which is a json file that maps your actions and data structures.
+
+
+## Intro into EOS database
+
+The EOS database is a special feature that enabled you to store data into the blockchain in a structural way. Under the hood EOS uses the Boost `multi_index_container` library.
+
+### Structuring your tables
+The EOS database tables can be formatted by `struct` data type, in these structures you are able to define the naming and type definition of your properties of that table.
+
+### Working with vectors
+Todo
+
+### Querying your data
+Todo
+
+### Persisting & Modifying
+Todo
+
+### Under the hood 
+Todo
+
+
