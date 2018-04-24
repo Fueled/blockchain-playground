@@ -58,8 +58,9 @@ class ballot : public contract {
       }
 
       // @abi action
-      void add_member( account_name account ) {
-
+      void add_member( account_name issue, account_name account ) {
+        auto iter = members.find(voter);
+        eosio_assert(iter == members.end(), "Account is already member of democracy");
       }
 
     private:
@@ -68,6 +69,7 @@ class ballot : public contract {
     	struct Member {
     		account_name owner;
     		uint64_t weight;
+        account_name granter;
 
     		account_name primary_key() const { return owner; }
 
