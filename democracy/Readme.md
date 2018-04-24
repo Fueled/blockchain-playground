@@ -144,7 +144,7 @@ eosiocpp -o hello.wast hello.cpp
 In order to push to the blockchain we create an Application Binary Interface, which is a json file that maps your actions and data structures.
 
 # Exploring eosio::multi_index
-The EOS landscape is still pretty new, we have been trying to find any information on the EOS platform, let alone specifically on the Database API the EOS platform provides.
+The EOS platform is still pretty new, we have been trying to find any information on the EOS platform, let alone specifically on the Database API the EOS platform provides. For now we have only found 
 
 This gave us the task to start figuring it out ourselves by literally digging through the EOS source code. We laid out what we have figured out by reading, so that you don't need to (hopefully).
 
@@ -159,7 +159,16 @@ The EOS database is a special feature that enabled you to store data into the bl
  *     - **scope** - an account where the data is stored
  *        - **table** - a name for the table that is being stored
  *           - **record** - a row in the table
- ```
+```
+
+There are some terms used here that can deceive you, here I laid out what these terms mean.
+- `code` is a number that correspondents to your contract code. You might have seen it before with building out smart contracts on EOS, it is the "identifier" of the smart contract.
+- `scope` Because the contract can be deployed multiple times the contract identifier is not suffice. The scope can be anything, but usually it is the account identifier which it is deployed with.
+- `table` The name of the table
+- `record` Hopefully that speaks for itself
+
+### EOS Database = uint64_t
+
 
 ### Structuring your tables
 The EOS database tables can be formatted by `struct` data type, in these structures you are able to define the naming and type definition of your properties of that table.
@@ -224,10 +233,23 @@ The EOS database structure is able to hold lists members (vectors) inside its da
 ### Querying your data
 The EOS Multi Index database comes with some functionality to retrieve back the information. Although the features are not as extensive as something like a SQL Query, but it does its basics:
 
+- Querying an entry with `.find`
 - Creating new entries with `.emplace`
 - Modifying existing entries with `.modify`
 - Retrieving a new `primary_key` value through `.available_primary_key`
-- Querying an entry with `.find`
+
+### Retrieving items
+For retrieving a record by its primary key we simply run:
+```
+proposals.find(proposal_id)
+```
+
+**Under the hood**
+This will simply run the `std::find_if` functionality that checks if the looped item has the correct primary key:
+
+```
+ptr._item->primary_key() == input_primary
+```
 
 #### Creating new items
 
@@ -258,6 +280,19 @@ modify( const T& obj, uint64_t payer, Lambda&& updater )
 ```
 
 Again we can see the `payer` and `Lambda` method, just like in our `.emplace` method. The first argument did change, this is now the reference object you would like to change. This means that we first need to *retrieve the element before we can modify it*.
+
+An example could be:
+```cpp
+auto iter = proposals.find(proposal_id); 
+
+// assert basically checks if iteration is at the end, meaning there is
+// no value
+eosio_assert(iter != proposals.end(), "Could not find proposal");
+
+proposals.modify( iter, 0, [&]( auto& proposal) {
+  proposal.description = "New value"
+});
+```
 
 
 
