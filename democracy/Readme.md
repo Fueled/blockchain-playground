@@ -144,13 +144,15 @@ eosiocpp -o hello.wast hello.cpp
 In order to push to the blockchain we create an Application Binary Interface, which is a json file that maps your actions and data structures.
 
 # Exploring eosio::multi_index
-The EOS platform is still pretty new, we have been trying to find any information on the EOS platform, let alone specifically on the Database API the EOS platform provides. For now we have only found 
+The EOS platform is still pretty new, we have been trying to find any information on the EOS platform, let alone specifically on the Database API the EOS platform provides. For now we have only found [this video tutorial](https://www.youtube.com/watch?v=EbWDHrm2ETY) to be the most insightful.
 
-This gave us the task to start figuring it out ourselves by literally digging through the EOS source code. We laid out what we have figured out by reading, so that you don't need to (hopefully).
+This gave us the task and opportunity to just figure it out by digging through the actual EOS source code. We laid out what we have figured out by reading, so that you don't need to (hopefully).
+
+The EOS software uses smart contracts itself to persist data about [RAM usage](https://github.com/EOSIO/eos/blob/master/contracts/eosio.system/delegate_bandwidth.cpp) (more about it later) and has some good examples [(1)](https://github.com/EOSIO/eos/blob/master/contracts/eosio.system/voting.cpp) [(2)](https://github.com/EOSIO/eos/blob/master/contracts/tic_tac_toe/tic_tac_toe.cpp) [(3)](https://github.com/EOSIO/eos/blob/master/contracts/eosio.token/eosio.token.cpp) we were able to use, here's our result. 
 
 ## Intro into EOS database
 
-The EOS database is a special feature that enabled you to store data into the blockchain in a structural way. Under the hood EOS heavily relied on the Boost library Database API. The EOS database, as it is described in `contracts/eosiolib/db.h` has a simple idea:
+The EOS database is a special feature that enabled you to store indexed data into the blockchain out of data structures. Under the hood EOS heavily relied on the design of the Boost library Database API. Having the database on the blockchain. does not mean everyone has right to do write/read on this database. The EOS database is basically build into multiple layers, as it is described in `contracts/eosiolib/db.h` has a simple idea:
 
 ```
  *  EOS.IO organizes data according to the following broad structure:
